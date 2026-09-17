@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { pickExercises } from './planner'
 import { loadData, newId, saveData } from './storage'
-import type { AppData, Exercise, Settings, Workout, WorkoutEntry } from './types'
+import type { AppData, Exercise, Settings, Theme, Workout, WorkoutEntry } from './types'
 
 interface Store {
   data: AppData
@@ -30,6 +30,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     setSaveFailed(!saveData(data))
   }, [data])
+
+  useEffect(() => {
+    const theme = data.settings.theme
+    applyTheme(theme)
+    if (theme !== 'system') return
+    const mq = matchMedia('(prefers-color-scheme: dark)')
+    const onChange = () => applyTheme(theme)
+    mq.addEventListener('change', onChange)
+    return () => mq.removeEventListener('change', onChange)
+  }, [data.settings.theme])
 
   const update = useCallback((fn: (d: AppData) => AppData) => setData((d) => fn(d)), [])
 
@@ -118,6 +128,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   )
 
   return <StoreContext.Provider value={store}>{children}</StoreContext.Provider>
+}
+
+/** Mirrors the theme onto <html> so CSS tokens and the browser chrome colour follow it. */
+function applyTheme(theme: Theme) {
+  const root = document.documentElement
+  if (theme === 'system') root.removeAttribute('data-theme')
+  else root.dataset.theme = theme
+  const dark = theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#111111' : '#f4f4f5')
 }
 
 export function useStore(): Store {

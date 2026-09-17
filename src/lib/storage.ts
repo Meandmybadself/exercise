@@ -1,4 +1,4 @@
-import type { AppData, EntryStatus, Exercise, Workout } from './types'
+import type { AppData, EntryStatus, Exercise, Theme, Workout } from './types'
 
 export const STORAGE_KEY = 'exercise:data'
 
@@ -18,7 +18,7 @@ export function newId(): string {
 export function defaultData(): AppData {
   return {
     version: 1,
-    settings: { exercisesPerWorkout: 6 },
+    settings: { exercisesPerWorkout: 6, theme: 'system' },
     exercises: SEED_EXERCISES,
     workouts: [],
   }
@@ -95,9 +95,10 @@ export function validateData(input: unknown): AppData {
 
   const settings = isRecord(input.settings) ? input.settings : {}
   const count = Number(settings.exercisesPerWorkout)
+  const theme: Theme = settings.theme === 'light' || settings.theme === 'dark' ? settings.theme : 'system'
   return {
     version: 1,
-    settings: { exercisesPerWorkout: Number.isInteger(count) && count > 0 ? count : 6 },
+    settings: { exercisesPerWorkout: Number.isInteger(count) && count > 0 ? count : 6, theme },
     exercises,
     workouts,
   }

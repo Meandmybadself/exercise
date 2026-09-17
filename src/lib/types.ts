@@ -23,8 +23,11 @@ export interface Workout {
   entries: WorkoutEntry[]
 }
 
+export type Theme = 'system' | 'light' | 'dark'
+
 export interface Settings {
   exercisesPerWorkout: number
+  theme: Theme
 }
 
 export interface AppData {

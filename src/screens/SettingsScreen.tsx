@@ -2,7 +2,13 @@ import { useRef, useState } from 'react'
 import { ConfirmButton } from '../components/ConfirmButton'
 import { activeExercises, validateData } from '../lib/storage'
 import { useStore } from '../lib/store'
-import type { AppData } from '../lib/types'
+import type { AppData, Theme } from '../lib/types'
+
+const THEMES: [Theme, string][] = [
+  ['system', 'System'],
+  ['light', 'Light'],
+  ['dark', 'Dark'],
+]
 
 export function SettingsScreen() {
   const { data, saveFailed, updateSettings, replaceData } = useStore()
@@ -84,6 +90,23 @@ export function SettingsScreen() {
               You only have {available} active exercises, so workouts will use all of them.
             </p>
           )}
+        </div>
+      </div>
+
+      <h2>Appearance</h2>
+      <div className="card">
+        <div className="segmented" role="radiogroup" aria-label="Theme">
+          {THEMES.map(([value, label]) => (
+            <button
+              key={value}
+              role="radio"
+              aria-checked={data.settings.theme === value}
+              className={data.settings.theme === value ? 'active' : ''}
+              onClick={() => updateSettings({ theme: value })}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
