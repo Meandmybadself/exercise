@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { pickExercises } from './planner'
+import { chooseExercises, pickExercises } from './planner'
 import { loadData, newId, saveData } from './storage'
 import type { AppData, Exercise, Settings, Theme, Workout, WorkoutEntry } from './types'
 
@@ -13,7 +13,8 @@ interface Store {
   updateExercise: (id: string, patch: Partial<Omit<Exercise, 'id'>>) => void
   removeExercise: (id: string) => void
   updateSettings: (patch: Partial<Settings>) => void
-  startWorkout: () => Workout
+  /** Starts a workout from the given exercises, or a random pick when none are given. */
+  startWorkout: (exerciseIds?: string[]) => Workout
   updateEntry: (workoutId: string, exerciseId: string, patch: Partial<WorkoutEntry>) => void
   swapEntry: (workoutId: string, exerciseId: string) => void
   finishWorkout: (workoutId: string) => void
@@ -78,14 +79,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateSettings: (patch) => update((d) => ({ ...d, settings: { ...d.settings, ...patch } })),
 
       // Only one workout may be in progress; a repeat call resumes it.
-      startWorkout: () => {
+      startWorkout: (exerciseIds) => {
         if (activeWorkout) return activeWorkout
+        const chosen = exerciseIds
+          ? chooseExercises(data.exercises, exerciseIds)
+          : pickExercises(data.exercises, data.workouts, data.settings.exercisesPerWorkout)
         const workout: Workout = {
           id: newId(),
           startedAt: new Date().toISOString(),
-          entries: pickExercises(data.exercises, data.workouts, data.settings.exercisesPerWorkout).map(
-            (e) => ({ exerciseId: e.id, status: 'pending' }),
-          ),
+          entries: chosen.map((e) => ({ exerciseId: e.id, status: 'pending' })),
         }
         update((d) => ({ ...d, workouts: [...d.workouts, workout] }))
         return workout

@@ -10,6 +10,7 @@ Live at [exercise.meandmybadself.com](https://exercise.meandmybadself.com).
 
 - Exercise library with optional per-exercise seat setting
 - Randomized workouts, biased toward least-recently-done exercises; configurable size
+- Or build one by hand: pick the exercises yourself, in the order you'll do them
 - Live timer that starts with the workout and stops when you finish, with durations kept in history
 - Swap or skip exercises mid-workout
 - Shows your last weight/reps for each exercise and prefills them

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { lastResult, pickExercises } from './planner'
+import { chooseExercises, lastResult, pickExercises } from './planner'
 import type { Exercise, Workout } from './types'
 
 const ex = (id: string, archived = false): Exercise => ({ id, name: id, ...(archived ? { archived } : {}) })
@@ -60,5 +60,21 @@ describe('lastResult', () => {
       entries: [{ exerciseId: 'a', status: 'skipped' }],
     }
     expect(lastResult('a', [w])).toBeUndefined()
+  })
+})
+
+describe('chooseExercises', () => {
+  const library = [ex('a'), ex('b'), ex('c'), ex('gone', true)]
+
+  it('keeps the order they were picked in', () => {
+    expect(chooseExercises(library, ['c', 'a']).map((e) => e.id)).toEqual(['c', 'a'])
+  })
+
+  it('drops unknown, archived, and repeated ids', () => {
+    expect(chooseExercises(library, ['a', 'nope', 'gone', 'a', 'b']).map((e) => e.id)).toEqual(['a', 'b'])
+  })
+
+  it('returns nothing for an empty pick', () => {
+    expect(chooseExercises(library, [])).toEqual([])
   })
 })

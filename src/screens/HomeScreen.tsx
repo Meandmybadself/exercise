@@ -46,8 +46,13 @@ export function HomeScreen() {
             ones you haven't done in a while.
           </p>
           <button className="btn-primary btn-block" onClick={onStart} disabled={available === 0}>
-            Start workout
+            Start random workout
           </button>
+          {available > 0 && (
+            <Link to="/choose" className="btn btn-block btn-ghost" style={{ marginTop: 8 }}>
+              Choose exercises myself
+            </Link>
+          )}
           {available === 0 && (
             <p className="muted small" style={{ marginTop: 12 }}>
               Add some exercises first.

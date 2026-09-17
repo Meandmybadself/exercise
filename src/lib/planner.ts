@@ -50,6 +50,23 @@ export function pickExercises(
   return picked
 }
 
+/**
+ * Resolves hand-picked exercise ids in the order they were chosen, dropping
+ * ids that are unknown, archived, or repeated.
+ */
+export function chooseExercises(exercises: Exercise[], ids: string[]): Exercise[] {
+  const byId = new Map(exercises.filter((e) => !e.archived).map((e) => [e.id, e]))
+  const seen = new Set<string>()
+  const picked: Exercise[] = []
+  for (const id of ids) {
+    const exercise = byId.get(id)
+    if (!exercise || seen.has(id)) continue
+    seen.add(id)
+    picked.push(exercise)
+  }
+  return picked
+}
+
 /** Most recent done entry for an exercise, for "last time" hints and prefill. */
 export function lastResult(
   exerciseId: string,
