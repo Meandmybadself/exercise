@@ -27,7 +27,7 @@ export function WorkoutScreen() {
     navigate(`/history/${workout!.id}`)
   }
 
-  function onDiscard() {
+  function onCancel() {
     deleteWorkout(workout!.id)
     navigate('/')
   }
@@ -74,9 +74,14 @@ export function WorkoutScreen() {
           >
             {done === total ? 'Finish workout' : `Finish (${total - done} unfinished)`}
           </button>
-          <ConfirmButton className="btn-danger btn-block" confirmLabel="Tap again to discard" onConfirm={onDiscard}>
-            Discard workout
+          <ConfirmButton className="btn-danger btn-block" confirmLabel="Tap again to cancel" onConfirm={onCancel}>
+            Cancel workout
           </ConfirmButton>
+          {done > 0 && (
+            <p className="muted small" style={{ textAlign: 'center' }}>
+              Cancelling throws the workout away. Finish instead to keep what you logged.
+            </p>
+          )}
         </>
       )}
     </div>

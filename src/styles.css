@@ -259,6 +259,11 @@ button:disabled {
   width: 100%;
 }
 
+/* Stacked full-width buttons shouldn't touch. */
+.btn-block + .btn-block {
+  margin-top: 8px;
+}
+
 .btn-sm {
   padding: 8px 14px;
   min-height: 44px;

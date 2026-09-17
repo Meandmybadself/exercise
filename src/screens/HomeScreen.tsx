@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { ConfirmButton } from '../components/ConfirmButton'
 import { ElapsedTime } from '../components/ElapsedTime'
 import { averageDurationMs, formatDurationCompact } from '../lib/duration'
 import { formatDate, formatResult, relativeDays } from '../lib/format'
@@ -6,7 +7,7 @@ import { activeExercises } from '../lib/storage'
 import { exerciseName, useExerciseMap, useStore } from '../lib/store'
 
 export function HomeScreen() {
-  const { data, activeWorkout, startWorkout } = useStore()
+  const { data, activeWorkout, startWorkout, deleteWorkout } = useStore()
   const exercises = useExerciseMap()
   const navigate = useNavigate()
 
@@ -38,6 +39,13 @@ export function HomeScreen() {
           <Link to={`/workout/${activeWorkout.id}`} className="btn btn-primary btn-block">
             Resume workout
           </Link>
+          <ConfirmButton
+            className="btn-danger btn-block"
+            confirmLabel="Tap again to cancel"
+            onConfirm={() => deleteWorkout(activeWorkout.id)}
+          >
+            Cancel workout
+          </ConfirmButton>
         </div>
       ) : (
         <div className="card">
