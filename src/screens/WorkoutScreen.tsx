@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { ConfirmButton } from '../components/ConfirmButton'
+import { ElapsedTime } from '../components/ElapsedTime'
 import { Field } from '../components/Field'
 import { NotFound } from '../components/NotFound'
 import { formatResult, relativeDays } from '../lib/format'
@@ -33,9 +34,12 @@ export function WorkoutScreen() {
     <div className="screen">
       <div className="screen-header">
         <h1>Workout</h1>
-        <span className="muted">
-          {done}/{total}
-        </span>
+        <div className="timer-block">
+          <ElapsedTime workout={workout} className={`timer ${isFinished ? 'muted' : ''}`} />
+          <div className="muted small">
+            {isFinished ? 'final time' : 'elapsed'} · {done}/{total}
+          </div>
+        </div>
       </div>
       <div className="progress">
         <div style={{ width: `${total ? (done / total) * 100 : 0}%` }} />

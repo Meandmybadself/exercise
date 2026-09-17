@@ -1,6 +1,7 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ConfirmButton } from '../components/ConfirmButton'
 import { NotFound } from '../components/NotFound'
+import { formatDuration, workoutDurationMs } from '../lib/duration'
 import { formatDateTime, formatResult } from '../lib/format'
 import { exerciseName, useExerciseMap, useStore } from '../lib/store'
 
@@ -13,16 +14,14 @@ export function WorkoutDetailScreen() {
 
   if (!workout) return <NotFound what="Workout" />
 
-  const duration = workout.finishedAt
-    ? Math.round((Date.parse(workout.finishedAt) - Date.parse(workout.startedAt)) / 60_000)
-    : undefined
+  const duration = workout.finishedAt ? workoutDurationMs(workout) : undefined
 
   return (
     <div className="screen">
       <div className="screen-header">
         <div>
           <h1>{formatDateTime(workout.startedAt)}</h1>
-          {duration !== undefined && <div className="muted small">{duration} min</div>}
+          {duration !== undefined && <div className="muted small">{formatDuration(duration)}</div>}
         </div>
       </div>
 

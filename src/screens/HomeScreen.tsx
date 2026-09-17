@@ -1,4 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
+import { ElapsedTime } from '../components/ElapsedTime'
+import { averageDurationMs, formatDurationCompact } from '../lib/duration'
 import { formatDate, formatResult, relativeDays } from '../lib/format'
 import { activeExercises } from '../lib/storage'
 import { exerciseName, useExerciseMap, useStore } from '../lib/store'
@@ -11,6 +13,7 @@ export function HomeScreen() {
   const available = activeExercises(data.exercises).length
   const completed = data.workouts.filter((w) => w.finishedAt)
   const last = completed.at(-1)
+  const averageMs = averageDurationMs(data.workouts)
 
   function onStart() {
     const w = startWorkout()
@@ -26,9 +29,11 @@ export function HomeScreen() {
       {activeWorkout ? (
         <div className="card">
           <div className="row-sub">Workout in progress</div>
-          <div className="row-title" style={{ marginBottom: 12 }}>
-            Started {relativeDays(activeWorkout.startedAt)} ·{' '}
-            {activeWorkout.entries.filter((e) => e.status !== 'pending').length}/{activeWorkout.entries.length} done
+          <div className="row" style={{ marginBottom: 12 }}>
+            <ElapsedTime workout={activeWorkout} className="timer" />
+            <span className="muted small">
+              {activeWorkout.entries.filter((e) => e.status !== 'pending').length}/{activeWorkout.entries.length} done
+            </span>
           </div>
           <Link to={`/workout/${activeWorkout.id}`} className="btn btn-primary btn-block">
             Resume workout
@@ -59,6 +64,10 @@ export function HomeScreen() {
         <div className="card row-main" style={{ margin: 0 }}>
           <div className="stat">{last ? relativeDays(last.startedAt).replace(' days ago', 'd') : '—'}</div>
           <div className="row-sub">last workout</div>
+        </div>
+        <div className="card row-main" style={{ margin: 0 }}>
+          <div className="stat">{averageMs === undefined ? '—' : formatDurationCompact(averageMs)}</div>
+          <div className="row-sub">avg time</div>
         </div>
       </div>
 
