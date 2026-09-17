@@ -35,7 +35,10 @@ export function ChooseWorkoutScreen() {
         <div className="empty">No exercises yet. Add some first.</div>
       ) : (
         <>
-          <p className="muted small">Tap the exercises you want. They run in the order you tap them.</p>
+          <p className="muted small">
+            Tap the exercises you want, in the order you'll do them. Or start with none and add them one at a time as
+            you go.
+          </p>
 
           <div className="list">
             {available.map((ex) => {
@@ -64,9 +67,9 @@ export function ChooseWorkoutScreen() {
           </div>
 
           <div className="sticky-actions">
-            <button className="btn-primary btn-block" onClick={onStart} disabled={picked.length === 0}>
+            <button className="btn-primary btn-block" onClick={onStart}>
               {picked.length === 0
-                ? 'Pick at least one'
+                ? 'Start and pick as I go'
                 : `Start workout (${picked.length} ${picked.length === 1 ? 'exercise' : 'exercises'})`}
             </button>
           </div>

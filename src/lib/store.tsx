@@ -16,6 +16,8 @@ interface Store {
   /** Starts a workout from the given exercises, or a random pick when none are given. */
   startWorkout: (exerciseIds?: string[]) => Workout
   updateEntry: (workoutId: string, exerciseId: string, patch: Partial<WorkoutEntry>) => void
+  /** Appends an exercise to a workout in progress; a duplicate is ignored. */
+  addEntry: (workoutId: string, exerciseId: string) => void
   swapEntry: (workoutId: string, exerciseId: string) => void
   finishWorkout: (workoutId: string) => void
   deleteWorkout: (workoutId: string) => void
@@ -98,6 +100,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           ...w,
           entries: w.entries.map((e) => (e.exerciseId === exerciseId ? { ...e, ...patch } : e)),
         })),
+
+      addEntry: (workoutId, exerciseId) =>
+        updateWorkout(workoutId, (w) =>
+          w.entries.some((e) => e.exerciseId === exerciseId)
+            ? w
+            : { ...w, entries: [...w.entries, { exerciseId, status: 'pending' }] },
+        ),
 
       // Replace an entry with a random exercise not already in this workout.
       swapEntry: (workoutId, exerciseId) =>

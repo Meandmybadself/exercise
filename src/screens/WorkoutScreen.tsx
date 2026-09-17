@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ConfirmButton } from '../components/ConfirmButton'
 import { ElapsedTime } from '../components/ElapsedTime'
@@ -5,13 +6,14 @@ import { Field } from '../components/Field'
 import { NotFound } from '../components/NotFound'
 import { formatResult, relativeDays } from '../lib/format'
 import { lastResult } from '../lib/planner'
+import { activeExercises } from '../lib/storage'
 import { exerciseName, useExerciseMap, useStore } from '../lib/store'
 import type { Workout, WorkoutEntry } from '../lib/types'
 
 export function WorkoutScreen() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { data, updateEntry, swapEntry, finishWorkout, deleteWorkout } = useStore()
+  const { data, updateEntry, addEntry, swapEntry, finishWorkout, deleteWorkout } = useStore()
   const workout = data.workouts.find((w) => w.id === id)
 
   if (!workout) return <NotFound what="Workout" />
@@ -45,6 +47,10 @@ export function WorkoutScreen() {
         <div style={{ width: `${total ? (done / total) * 100 : 0}%` }} />
       </div>
 
+      {total === 0 && !isFinished && (
+        <div className="empty">Nothing added yet. Pick your first exercise below.</div>
+      )}
+
       <div className="list">
         {workout.entries.map((entry) => (
           <EntryCard
@@ -59,13 +65,75 @@ export function WorkoutScreen() {
 
       {!isFinished && (
         <>
-          <button className="btn-primary btn-block" style={{ marginTop: 20 }} onClick={onFinish}>
+          <AddExercise workout={workout} onAdd={(exerciseId) => addEntry(workout.id, exerciseId)} />
+          <button
+            className="btn-primary btn-block"
+            style={{ marginTop: 20 }}
+            onClick={onFinish}
+            disabled={total === 0}
+          >
             {done === total ? 'Finish workout' : `Finish (${total - done} unfinished)`}
           </button>
           <ConfirmButton className="btn-danger btn-block" confirmLabel="Tap again to discard" onConfirm={onDiscard}>
             Discard workout
           </ConfirmButton>
         </>
+      )}
+    </div>
+  )
+}
+
+/** Picks the next exercise mid-workout, so a session can be built as it goes. */
+function AddExercise({ workout, onAdd }: { workout: Workout; onAdd: (exerciseId: string) => void }) {
+  const { data } = useStore()
+  const [open, setOpen] = useState(false)
+
+  // An empty workout has nothing to go back to, so the list just stays open.
+  const isEmpty = workout.entries.length === 0
+  const inWorkout = new Set(workout.entries.map((e) => e.exerciseId))
+  const remaining = activeExercises(data.exercises)
+    .filter((e) => !inWorkout.has(e.id))
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  if (remaining.length === 0) {
+    return <p className="muted small" style={{ marginTop: 16 }}>Every exercise is already in this workout.</p>
+  }
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      {!isEmpty && (
+        <button className="btn-ghost btn-block" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+          {open ? 'Never mind' : '+ Add an exercise'}
+        </button>
+      )}
+
+      {(open || isEmpty) && (
+        <div className="list" style={{ marginTop: 8 }}>
+          {remaining.map((ex) => {
+            const last = lastResult(ex.id, data.workouts)
+            return (
+              <button
+                key={ex.id}
+                className="card pick"
+                onClick={() => {
+                  onAdd(ex.id)
+                  setOpen(false)
+                }}
+              >
+                <span className="row-main">
+                  <span className="row-title">{ex.name}</span>
+                  <span className="row-sub">
+                    {ex.seatSetting ? `Seat ${ex.seatSetting} · ` : ''}
+                    {last
+                      ? `${formatResult(last.entry.weight, last.entry.reps)} · ${relativeDays(last.date)}`
+                      : 'never done'}
+                  </span>
+                </span>
+                <span className="muted">+</span>
+              </button>
+            )
+          })}
+        </div>
       )}
     </div>
   )
