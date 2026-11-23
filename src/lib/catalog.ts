@@ -27,6 +27,20 @@ export const CATALOG: CatalogItem[] = [
   { name: 'Technogym Upper Back Selection', muscle: 'back' },
   { name: 'Hoist Biceps Curl', muscle: 'biceps' },
   { name: 'Life Fitness Biceps Curl', muscle: 'biceps' },
+  { name: 'Freemotion Genesis Dual Cable Cross', muscle: 'chest' },
+  { name: 'Freemotion Genesis Squat', muscle: 'quads' },
+  { name: 'Life Fitness Hip Abduction', muscle: 'abductors' },
+  { name: 'Life Fitness Hip Adduction', muscle: 'adductors' },
+  { name: 'Hoist Leg Extension', muscle: 'quads' },
+  { name: 'Life Fitness Seated Leg Press', muscle: 'quads' },
+  { name: 'Life Fitness Seated Leg Curl', muscle: 'hamstrings' },
+  { name: 'Technogym Prone Leg Curl', muscle: 'hamstrings' },
+  { name: 'Cybex Eagle Prone Leg Curl', muscle: 'hamstrings' },
+  { name: 'Technogym Lat Machine', muscle: 'back' },
+  { name: 'Life Fitness Lat Pulldown', muscle: 'back' },
+  { name: 'Hoist Mid Row', muscle: 'back' },
+  { name: 'Hoist Shoulder Press', muscle: 'shoulders' },
+  { name: 'Life Fitness Shoulder Press', muscle: 'shoulders' },
 ]
 
 const norm = (name: string) => name.trim().toLowerCase()
