@@ -1,10 +1,24 @@
 export type EntryStatus = 'pending' | 'done' | 'skipped'
 
+export type MuscleGroup =
+  | 'chest'
+  | 'shoulders'
+  | 'triceps'
+  | 'back'
+  | 'biceps'
+  | 'quads'
+  | 'hamstrings'
+  | 'adductors'
+  | 'abductors'
+  | 'core'
+
 export interface Exercise {
   id: string
   name: string
   /** Optional machine seat/back setting, e.g. "Seat 4, back 2". */
   seatSetting?: string
+  /** Main muscle worked; used to put opposing muscles back to back. */
+  muscle?: MuscleGroup
   /** Archived exercises are hidden from selection but keep their history. */
   archived?: boolean
 }

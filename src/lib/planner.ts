@@ -1,3 +1,5 @@
+import { catalogMuscle } from './catalog'
+import { alternateMuscles, muscleOf, musclesOppose } from './muscles'
 import type { Exercise, Workout, WorkoutEntry } from './types'
 
 /** Milliseconds since the exercise was last logged as done; Infinity if never. */
@@ -13,9 +15,13 @@ export function msSinceLastDone(exerciseId: string, workouts: Workout[], now = D
   return latest === -Infinity ? Infinity : now - latest
 }
 
+const muscleFor = (e: Exercise) => muscleOf(e, catalogMuscle)
+
 /**
  * Picks `count` exercises at random, weighted toward those done least recently.
  * Never-done exercises get the highest weight. Weighted sampling without replacement.
+ * Each pick after the first is drawn from muscles opposing the previous one when any
+ * remain, so the result alternates (push/pull, quads/hamstrings, ...).
  */
 export function pickExercises(
   exercises: Exercise[],
@@ -34,10 +40,15 @@ export function pickExercises(
 
   const picked: Exercise[] = []
   while (picked.length < count && weighted.length > 0) {
-    const total = weighted.reduce((sum, w) => sum + w.weight, 0)
+    const prev = picked.at(-1)
+    const opposing = prev
+      ? weighted.flatMap((w, i) => (musclesOppose(muscleFor(prev), muscleFor(w.exercise)) ? [i] : []))
+      : []
+    const candidates = opposing.length > 0 ? opposing : weighted.map((_, i) => i)
+    const total = candidates.reduce((sum, i) => sum + weighted[i].weight, 0)
     let r = random() * total
-    let idx = weighted.length - 1
-    for (let i = 0; i < weighted.length; i++) {
+    let idx = candidates[candidates.length - 1]
+    for (const i of candidates) {
       r -= weighted[i].weight
       if (r <= 0) {
         idx = i
@@ -65,6 +76,11 @@ export function chooseExercises(exercises: Exercise[], ids: string[]): Exercise[
     picked.push(exercise)
   }
   return picked
+}
+
+/** Reorders so opposing muscles sit back to back where possible. */
+export function orderForAlternation(exercises: Exercise[]): Exercise[] {
+  return alternateMuscles(exercises, muscleFor)
 }
 
 /** Most recent done entry for an exercise, for "last time" hints and prefill. */
