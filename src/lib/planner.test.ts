@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chooseExercises, lastResult, pickExercises } from './planner'
+import { chooseExercises, lastResult, orderForAlternation, pickExercises } from './planner'
 import type { Exercise, Workout } from './types'
 
 const ex = (id: string, archived = false): Exercise => ({ id, name: id, ...(archived ? { archived } : {}) })
@@ -76,5 +76,34 @@ describe('chooseExercises', () => {
 
   it('returns nothing for an empty pick', () => {
     expect(chooseExercises(library, [])).toEqual([])
+  })
+})
+
+describe('opposing muscles', () => {
+  const m = (id: string, muscle: Exercise['muscle']): Exercise => ({ id, name: id, muscle })
+  const library = [m('chest1', 'chest'), m('chest2', 'shoulders'), m('row1', 'back'), m('curl', 'biceps'), m('quad', 'quads'), m('ham', 'hamstrings')]
+
+  it('alternates opposing muscles in random picks', () => {
+    const upper = new Set(['chest1', 'chest2', 'row1', 'curl'])
+    for (let i = 0; i < 50; i++) {
+      const ids = pickExercises(library, [], 6).map((e) => e.id)
+      expect(new Set(ids).size).toBe(6)
+      // Every opposing partner is available, so each step must switch sides of its axis.
+      const side = (id: string) => (id === 'chest1' || id === 'chest2' || id === 'quad' ? 0 : 1)
+      for (let k = 1; k < ids.length; k++) {
+        const sameAxis = upper.has(ids[k]) === upper.has(ids[k - 1])
+        if (sameAxis) expect(side(ids[k])).not.toBe(side(ids[k - 1]))
+      }
+    }
+  })
+
+  it('follows a push with a pull', () => {
+    const picked = pickExercises(library.slice(0, 4), [], 2, () => 0).map((e) => e.id)
+    expect(picked).toEqual(['chest1', 'row1'])
+  })
+
+  it('reorders by alternation without dropping anything', () => {
+    const out = orderForAlternation([m('a', 'chest'), m('b', 'shoulders'), m('c', 'back'), m('d', 'triceps'), m('e', 'biceps')])
+    expect(out.map((e) => e.id)).toEqual(['a', 'c', 'b', 'e', 'd'])
   })
 })

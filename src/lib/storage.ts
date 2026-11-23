@@ -1,15 +1,10 @@
+import { CATALOG } from './catalog'
+import { isMuscleGroup } from './muscles'
 import type { AppData, EntryStatus, Exercise, Theme, Workout } from './types'
 
 export const STORAGE_KEY = 'exercise:data'
 
-const SEED_EXERCISES: Exercise[] = [
-  'Naut. Nitro Adductor',
-  'Hammer Incline Press',
-  'MedX Pullover',
-  'MedX Torso Arm - Sup.',
-  'Naut. Nitro Abdominals',
-  'Naut. Nitro Abductor',
-].map((name) => ({ id: newId(), name }))
+const SEED_EXERCISES: Exercise[] = CATALOG.map(({ name, muscle }) => ({ id: newId(), name, muscle }))
 
 export function newId(): string {
   return crypto.randomUUID()
@@ -66,6 +61,7 @@ export function validateData(input: unknown): AppData {
       id: e.id,
       name: e.name,
       ...(typeof e.seatSetting === 'string' && e.seatSetting ? { seatSetting: e.seatSetting } : {}),
+      ...(isMuscleGroup(e.muscle) ? { muscle: e.muscle } : {}),
       ...(e.archived === true ? { archived: true } : {}),
     }
   })

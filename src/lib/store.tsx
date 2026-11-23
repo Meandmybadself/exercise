@@ -1,5 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { chooseExercises, pickExercises } from './planner'
+import { catalogMuscle } from './catalog'
+import { muscleOf } from './muscles'
 import { loadData, newId, saveData } from './storage'
 import type { AppData, Exercise, Settings, Theme, Workout, WorkoutEntry } from './types'
 
@@ -13,8 +15,10 @@ interface Store {
   updateExercise: (id: string, patch: Partial<Omit<Exercise, 'id'>>) => void
   removeExercise: (id: string) => void
   updateSettings: (patch: Partial<Settings>) => void
-  /** Starts a workout from the given exercises, or a random pick when none are given. */
-  startWorkout: (exerciseIds?: string[]) => Workout
+  /** Starts a workout from the given exercises, or a random pick of `count` when none are given. */
+  startWorkout: (exerciseIds?: string[], count?: number) => Workout
+  /** Adds several exercises to the library in one update. */
+  addExercises: (inputs: Omit<Exercise, 'id'>[]) => void
   updateEntry: (workoutId: string, exerciseId: string, patch: Partial<WorkoutEntry>) => void
   /** Appends an exercise to a workout in progress; a duplicate is ignored. */
   addEntry: (workoutId: string, exerciseId: string) => void
@@ -63,6 +67,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       addExercise: (input) =>
         update((d) => ({ ...d, exercises: [...d.exercises, { ...input, id: newId() }] })),
 
+      addExercises: (inputs) =>
+        update((d) => ({ ...d, exercises: [...d.exercises, ...inputs.map((i) => ({ ...i, id: newId() }))] })),
+
       updateExercise: (id, patch) =>
         update((d) => ({ ...d, exercises: d.exercises.map((e) => (e.id === id ? { ...e, ...patch } : e)) })),
 
@@ -81,11 +88,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateSettings: (patch) => update((d) => ({ ...d, settings: { ...d.settings, ...patch } })),
 
       // Only one workout may be in progress; a repeat call resumes it.
-      startWorkout: (exerciseIds) => {
+      startWorkout: (exerciseIds, count) => {
         if (activeWorkout) return activeWorkout
         const chosen = exerciseIds
           ? chooseExercises(data.exercises, exerciseIds)
-          : pickExercises(data.exercises, data.workouts, data.settings.exercisesPerWorkout)
+          : pickExercises(data.exercises, data.workouts, count ?? data.settings.exercisesPerWorkout)
         const workout: Workout = {
           id: newId(),
           startedAt: new Date().toISOString(),
@@ -112,7 +119,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       swapEntry: (workoutId, exerciseId) =>
         updateWorkout(workoutId, (w, d) => {
           const inUse = new Set(w.entries.map((e) => e.exerciseId))
-          const candidates = d.exercises.filter((e) => !inUse.has(e.id))
+          const unused = d.exercises.filter((e) => !inUse.has(e.id))
+          // Prefer the same muscle so the push/pull alternation survives the swap.
+          const current = d.exercises.find((e) => e.id === exerciseId)
+          const muscle = current && muscleOf(current, catalogMuscle)
+          const sameMuscle = unused.filter((e) => !e.archived && muscle && muscleOf(e, catalogMuscle) === muscle)
+          const candidates = sameMuscle.length > 0 ? sameMuscle : unused
           const [replacement] = pickExercises(candidates, d.workouts, 1)
           if (!replacement) return w
           return {

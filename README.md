@@ -9,7 +9,9 @@ Live at [exercise.meandmybadself.com](https://exercise.meandmybadself.com).
 ## Features
 
 - Exercise library with optional per-exercise seat setting
-- Randomized workouts, biased toward least-recently-done exercises; configurable size
+- Randomized workouts, biased toward least-recently-done exercises; choose how many exercises on the Train screen
+- Opposing muscles (push/pull, quads/hamstrings, adductors/abductors) are placed back to back
+- Built-in equipment catalog with a muscle group per machine; add missing machines from the Exercises tab
 - Or build one by hand: pick the exercises up front, or add them one at a time mid-workout
 - Live timer that starts with the workout and stops when you finish, with durations kept in history
 - Swap or skip exercises mid-workout
@@ -38,7 +40,7 @@ Exports are a single JSON document:
 {
   version: 1,
   settings: { exercisesPerWorkout: number },
-  exercises: { id, name, seatSetting?, archived? }[],
+  exercises: { id, name, seatSetting?, muscle?, archived? }[],
   workouts: { id, startedAt, finishedAt?, entries: { exerciseId, weight?, reps?, status }[] }[]
 }
 ```

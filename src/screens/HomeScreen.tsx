@@ -7,7 +7,7 @@ import { activeExercises } from '../lib/storage'
 import { exerciseName, useExerciseMap, useStore } from '../lib/store'
 
 export function HomeScreen() {
-  const { data, activeWorkout, startWorkout, deleteWorkout } = useStore()
+  const { data, activeWorkout, startWorkout, deleteWorkout, updateSettings } = useStore()
   const exercises = useExerciseMap()
   const navigate = useNavigate()
 
@@ -16,8 +16,14 @@ export function HomeScreen() {
   const last = completed.at(-1)
   const averageMs = averageDurationMs(data.workouts)
 
+  const count = Math.max(1, Math.min(data.settings.exercisesPerWorkout, available))
+
+  function setCount(n: number) {
+    updateSettings({ exercisesPerWorkout: Math.max(1, Math.min(n, available)) })
+  }
+
   function onStart() {
-    const w = startWorkout()
+    const w = startWorkout(undefined, count)
     navigate(`/workout/${w.id}`)
   }
 
@@ -49,9 +55,25 @@ export function HomeScreen() {
         </div>
       ) : (
         <div className="card">
+          {available > 0 && (
+            <div className="field" role="group" aria-labelledby="count-label">
+              <label id="count-label">How many exercises?</label>
+              <div className="row">
+                <button style={{ width: 64 }} aria-label="Fewer exercises" onClick={() => setCount(count - 1)} disabled={count <= 1}>
+                  −
+                </button>
+                <span className="stat" style={{ flex: 1, textAlign: 'center' }} aria-live="polite">
+                  {count}
+                </span>
+                <button style={{ width: 64 }} aria-label="More exercises" onClick={() => setCount(count + 1)} disabled={count >= available}>
+                  +
+                </button>
+              </div>
+            </div>
+          )}
           <p className="muted small">
-            Picks {Math.min(data.settings.exercisesPerWorkout, available)} of your {available} exercises, favoring the
-            ones you haven't done in a while.
+            Picks {count} of your {available} exercises, favoring the ones you haven't done in a while and
+            alternating opposing muscles.
           </p>
           <button className="btn-primary btn-block" onClick={onStart} disabled={available === 0}>
             Start random workout

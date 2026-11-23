@@ -3,8 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ConfirmButton } from '../components/ConfirmButton'
 import { Field } from '../components/Field'
 import { NotFound } from '../components/NotFound'
+import { MuscleSelect } from '../components/MuscleSelect'
+import { catalogMuscle } from '../lib/catalog'
 import { formatDate, formatResult } from '../lib/format'
 import { useStore } from '../lib/store'
+import type { MuscleGroup } from '../lib/types'
 
 export function ExerciseDetailScreen() {
   const { id } = useParams()
@@ -14,6 +17,9 @@ export function ExerciseDetailScreen() {
 
   const [name, setName] = useState(exercise?.name ?? '')
   const [seat, setSeat] = useState(exercise?.seatSetting ?? '')
+  const [muscle, setMuscle] = useState<MuscleGroup | undefined>(
+    exercise ? (exercise.muscle ?? catalogMuscle(exercise.name)) : undefined,
+  )
 
   if (!exercise) return <NotFound what="Exercise" />
 
@@ -25,12 +31,13 @@ export function ExerciseDetailScreen() {
     })
     .reverse()
 
-  const dirty = name.trim() !== exercise.name || seat.trim() !== (exercise.seatSetting ?? '')
+  const dirty = name.trim() !== exercise.name || seat.trim() !== (exercise.seatSetting ?? '') ||
+    muscle !== (exercise.muscle ?? catalogMuscle(exercise.name))
 
   function save() {
     const trimmed = name.trim()
     if (!trimmed) return
-    updateExercise(exercise!.id, { name: trimmed, seatSetting: seat.trim() || undefined })
+    updateExercise(exercise!.id, { name: trimmed, seatSetting: seat.trim() || undefined, muscle })
   }
 
   return (
@@ -49,6 +56,7 @@ export function ExerciseDetailScreen() {
           onChange={(e) => setSeat(e.target.value)}
           placeholder="e.g. Seat 4, back 2"
         />
+        <MuscleSelect value={muscle} onChange={setMuscle} />
         <button className="btn-primary btn-block" onClick={save} disabled={!dirty || !name.trim()}>
           Save
         </button>
