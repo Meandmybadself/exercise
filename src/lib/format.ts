@@ -19,8 +19,18 @@ export function formatResult(weight?: number, reps?: number): string {
   return parts.join(' × ') || '—'
 }
 
+/** Whole calendar days (local time) between `iso` and now, so 11pm two nights ago is "2 days ago", not "yesterday". */
+export function calendarDaysAgo(iso: string, now = Date.now()): number {
+  const startOfDay = (ms: number) => {
+    const d = new Date(ms)
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()
+  }
+  // Rounding absorbs the 23/25-hour days around daylight saving changes.
+  return Math.round((startOfDay(now) - startOfDay(Date.parse(iso))) / 86_400_000)
+}
+
 export function relativeDays(iso: string, now = Date.now()): string {
-  const days = Math.floor((now - Date.parse(iso)) / 86_400_000)
+  const days = calendarDaysAgo(iso, now)
   if (days <= 0) return 'today'
   if (days === 1) return 'yesterday'
   return `${days} days ago`
