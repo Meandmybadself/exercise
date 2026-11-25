@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { chooseExercises, pickExercises } from './planner'
+import { pickExercises } from './planner'
 import { exerciseKey, inferMuscle } from './catalog'
 import { syncLibrary } from './library'
 import { muscleOf } from './muscles'
@@ -16,8 +16,8 @@ interface Store {
   updateExercise: (id: string, patch: Partial<Omit<Exercise, 'id'>>) => void
   removeExercise: (id: string) => void
   updateSettings: (patch: Partial<Settings>) => void
-  /** Starts a workout from the given exercises, or a random pick of `count` when none are given. */
-  startWorkout: (exerciseIds?: string[], count?: number) => Workout
+  /** Starts an empty workout; exercises are added as you go. Resumes the one in progress if any. */
+  startWorkout: () => Workout
   /** Adds several exercises to the library in one update. */
   addExercises: (inputs: Omit<Exercise, 'id'>[]) => void
   updateEntry: (workoutId: string, exerciseId: string, patch: Partial<WorkoutEntry>) => void
@@ -89,16 +89,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateSettings: (patch) => update((d) => ({ ...d, settings: { ...d.settings, ...patch } })),
 
       // Only one workout may be in progress; a repeat call resumes it.
-      startWorkout: (exerciseIds, count) => {
+      startWorkout: () => {
         if (activeWorkout) return activeWorkout
-        const chosen = exerciseIds
-          ? chooseExercises(data.exercises, exerciseIds)
-          : pickExercises(data.exercises, data.workouts, count ?? data.settings.exercisesPerWorkout)
-        const workout: Workout = {
-          id: newId(),
-          startedAt: new Date().toISOString(),
-          entries: chosen.map((e) => ({ exerciseId: e.id, status: 'pending' })),
-        }
+        const workout: Workout = { id: newId(), startedAt: new Date().toISOString(), entries: [] }
         update((d) => ({ ...d, workouts: [...d.workouts, workout] }))
         return workout
       },

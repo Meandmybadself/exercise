@@ -552,3 +552,28 @@ input:focus {
   color: var(--muted);
   white-space: pre-wrap;
 }
+
+/* Next-exercise panel */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.chip {
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 15px;
+}
+
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text, #fff);
+}
+
+.suggestion {
+  margin-bottom: 0;
+}

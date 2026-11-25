@@ -2,12 +2,11 @@ import { useId, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ConfirmButton } from '../components/ConfirmButton'
 import { ElapsedTime } from '../components/ElapsedTime'
+import { NextExercise } from '../components/NextExercise'
 import { Field } from '../components/Field'
 import { NotFound } from '../components/NotFound'
-import { exerciseKey } from '../lib/catalog'
 import { formatResult, numberText, parseNumber, relativeDays } from '../lib/format'
 import { lastResult } from '../lib/planner'
-import { activeExercises } from '../lib/storage'
 import { exerciseName, useExerciseMap, useStore } from '../lib/store'
 import type { Workout, WorkoutEntry } from '../lib/types'
 
@@ -49,7 +48,7 @@ export function WorkoutScreen() {
       </div>
 
       {total === 0 && !isFinished && (
-        <div className="empty">Nothing added yet. Pick your first exercise below.</div>
+        <div className="empty">Your workout is empty.</div>
       )}
 
       <div className="list">
@@ -66,7 +65,7 @@ export function WorkoutScreen() {
 
       {!isFinished && (
         <>
-          <AddExercise workout={workout} onAdd={(exerciseId) => addEntry(workout.id, exerciseId)} />
+          <NextExercise workout={workout} onAdd={(exerciseId) => addEntry(workout.id, exerciseId)} />
           <button
             className="btn-primary btn-block"
             style={{ marginTop: 20 }}
@@ -84,63 +83,6 @@ export function WorkoutScreen() {
             </p>
           )}
         </>
-      )}
-    </div>
-  )
-}
-
-/** Picks the next exercise mid-workout, so a session can be built as it goes. */
-function AddExercise({ workout, onAdd }: { workout: Workout; onAdd: (exerciseId: string) => void }) {
-  const { data } = useStore()
-  const [open, setOpen] = useState(false)
-
-  // An empty workout has nothing to go back to, so the list just stays open.
-  const isEmpty = workout.entries.length === 0
-  const byId = new Map(data.exercises.map((e) => [e.id, e]))
-  const inWorkout = new Set(workout.entries.map((e) => exerciseKey(byId.get(e.exerciseId)?.name ?? e.exerciseId)))
-  const remaining = activeExercises(data.exercises)
-    .filter((e) => !inWorkout.has(exerciseKey(e.name)))
-    .sort((a, b) => a.name.localeCompare(b.name))
-
-  if (remaining.length === 0) {
-    return <p className="muted small" style={{ marginTop: 16 }}>Every exercise is already in this workout.</p>
-  }
-
-  return (
-    <div style={{ marginTop: 16 }}>
-      {!isEmpty && (
-        <button className="btn-ghost btn-block" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
-          {open ? 'Never mind' : '+ Add an exercise'}
-        </button>
-      )}
-
-      {(open || isEmpty) && (
-        <div className="list" style={{ marginTop: 8 }}>
-          {remaining.map((ex) => {
-            const last = lastResult(ex.id, data.workouts)
-            return (
-              <button
-                key={ex.id}
-                className="card pick"
-                onClick={() => {
-                  onAdd(ex.id)
-                  setOpen(false)
-                }}
-              >
-                <span className="row-main">
-                  <span className="row-title">{ex.name}</span>
-                  <span className="row-sub">
-                    {ex.seatSetting ? `Seat ${ex.seatSetting} · ` : ''}
-                    {last
-                      ? `${formatResult(last.entry.weight, last.entry.reps)} · ${relativeDays(last.date)}`
-                      : 'never done'}
-                  </span>
-                </span>
-                <span className="muted">+</span>
-              </button>
-            )
-          })}
-        </div>
       )}
     </div>
   )

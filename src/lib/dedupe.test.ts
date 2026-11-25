@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { dedupeLibrary } from './dedupe'
-import { chooseExercises, pickExercises } from './planner'
+import { pickExercises } from './planner'
 import type { Exercise, Workout } from './types'
 
 const ex = (id: string, name: string, extra: Partial<Exercise> = {}): Exercise => ({ id, name, ...extra })
@@ -48,8 +48,5 @@ describe('one entry per exercise in a workout', () => {
       expect(names).toHaveLength(2)
       expect(names.filter((n) => n.includes('Leg Press'))).toHaveLength(1)
     }
-  })
-  it('hand-picked workouts drop the second name for the same exercise', () => {
-    expect(chooseExercises(dupes, ['a', 'b', 'c']).map((e) => e.id)).toEqual(['a', 'c'])
   })
 })
