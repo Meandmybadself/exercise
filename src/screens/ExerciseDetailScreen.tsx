@@ -4,7 +4,7 @@ import { ConfirmButton } from '../components/ConfirmButton'
 import { Field } from '../components/Field'
 import { NotFound } from '../components/NotFound'
 import { MuscleSelect } from '../components/MuscleSelect'
-import { catalogMuscle } from '../lib/catalog'
+import { inferMuscle } from '../lib/catalog'
 import { formatDate, formatResult } from '../lib/format'
 import { useStore } from '../lib/store'
 import type { MuscleGroup } from '../lib/types'
@@ -18,7 +18,7 @@ export function ExerciseDetailScreen() {
   const [name, setName] = useState(exercise?.name ?? '')
   const [seat, setSeat] = useState(exercise?.seatSetting ?? '')
   const [muscle, setMuscle] = useState<MuscleGroup | undefined>(
-    exercise ? (exercise.muscle ?? catalogMuscle(exercise.name)) : undefined,
+    exercise ? (exercise.muscle ?? inferMuscle(exercise.name)) : undefined,
   )
 
   if (!exercise) return <NotFound what="Exercise" />
@@ -32,7 +32,7 @@ export function ExerciseDetailScreen() {
     .reverse()
 
   const dirty = name.trim() !== exercise.name || seat.trim() !== (exercise.seatSetting ?? '') ||
-    muscle !== (exercise.muscle ?? catalogMuscle(exercise.name))
+    muscle !== (exercise.muscle ?? inferMuscle(exercise.name))
 
   function save() {
     const trimmed = name.trim()

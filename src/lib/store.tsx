@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { chooseExercises, pickExercises } from './planner'
-import { catalogMuscle } from './catalog'
+import { inferMuscle, syncCatalog } from './catalog'
 import { muscleOf } from './muscles'
 import { loadData, newId, saveData } from './storage'
 import type { AppData, Exercise, Settings, Theme, Workout, WorkoutEntry } from './types'
@@ -122,8 +122,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const unused = d.exercises.filter((e) => !inUse.has(e.id))
           // Prefer the same muscle so the push/pull alternation survives the swap.
           const current = d.exercises.find((e) => e.id === exerciseId)
-          const muscle = current && muscleOf(current, catalogMuscle)
-          const sameMuscle = unused.filter((e) => !e.archived && muscle && muscleOf(e, catalogMuscle) === muscle)
+          const muscle = current && muscleOf(current, inferMuscle)
+          const sameMuscle = unused.filter((e) => !e.archived && muscle && muscleOf(e, inferMuscle) === muscle)
           const candidates = sameMuscle.length > 0 ? sameMuscle : unused
           const [replacement] = pickExercises(candidates, d.workouts, 1)
           if (!replacement) return w
@@ -145,7 +145,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       deleteWorkout: (workoutId) =>
         update((d) => ({ ...d, workouts: d.workouts.filter((w) => w.id !== workoutId) })),
 
-      replaceData: (next) => setData(next),
+      replaceData: (next) => setData(syncCatalog(next, newId)),
     }),
     [data, activeWorkout, saveFailed, update, updateWorkout],
   )
