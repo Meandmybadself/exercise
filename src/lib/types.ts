@@ -27,6 +27,8 @@ export interface WorkoutEntry {
   exerciseId: string
   weight?: number
   reps?: number
+  /** Free-form note about how the set felt, form cues, settings used, etc. */
+  note?: string
   status: EntryStatus
 }
 
@@ -53,4 +55,6 @@ export interface AppData {
   catalogSynced?: string[]
   /** Set once brand names have been removed from exercise names. */
   brandsStripped?: boolean
+  /** Set once duplicate exercises have been merged. */
+  deduped?: boolean
 }

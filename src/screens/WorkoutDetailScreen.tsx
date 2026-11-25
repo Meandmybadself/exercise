@@ -27,11 +27,14 @@ export function WorkoutDetailScreen() {
 
       <div className="list">
         {workout.entries.map((en) => (
-          <Link key={en.exerciseId} to={`/exercises/${en.exerciseId}`} className="card link-card row">
-            <span className={en.status === 'skipped' ? 'muted' : 'row-title'}>
-              {exerciseName(exercises, en.exerciseId)}
-            </span>
-            <span className="muted">{en.status === 'skipped' ? 'skipped' : formatResult(en.weight, en.reps)}</span>
+          <Link key={en.exerciseId} to={`/exercises/${en.exerciseId}`} className="card link-card">
+            <div className="row">
+              <span className={en.status === 'skipped' ? 'muted' : 'row-title'}>
+                {exerciseName(exercises, en.exerciseId)}
+              </span>
+              <span className="muted">{en.status === 'skipped' ? 'skipped' : formatResult(en.weight, en.reps)}</span>
+            </div>
+            {en.note && <div className="entry-note">{en.note}</div>}
           </Link>
         ))}
       </div>

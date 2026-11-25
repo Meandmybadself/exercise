@@ -9,13 +9,13 @@ Live at [exercise.meandmybadself.com](https://exercise.meandmybadself.com).
 ## Features
 
 - Exercise library with optional per-exercise seat setting
-- Randomized workouts, biased toward least-recently-done exercises; choose how many exercises on the Train screen
-- Opposing muscles (push/pull, quads/hamstrings, adductors/abductors) are placed back to back
+- Workouts start empty and you add one exercise at a time, two ways: **Choose myself** (searchable list) or **Suggest next**
+- Suggestions favor the opposite muscle to what you just did (push/pull, quads/hamstrings, adductors/abductors) and what you haven't done in a while; steer by muscle group and tap **Another** for the next one
 - Built-in equipment catalog with a muscle group per machine; add missing machines from the Exercises tab
-- Or build one by hand: pick the exercises up front, or add them one at a time mid-workout
 - Live timer that starts with the workout and stops when you finish, with durations kept in history
 - Swap or skip exercises mid-workout
 - Shows your last weight/reps for each exercise and prefills them
+- Optional note on each logged set, shown in history, progress and as a reminder next time
 - History log and per-exercise progression
 - Import / export of all history and configuration as JSON
 - Installable PWA; works offline

@@ -51,3 +51,18 @@ describe('validateData duplicate entries', () => {
     expect(out.workouts[0].entries).toEqual([{ exerciseId: 'a', status: 'done', weight: 1 }])
   })
 })
+
+describe('validateData notes', () => {
+  const base = { version: 1, exercises: [{ id: 'a', name: 'A' }] }
+  const entries = (note: unknown) => [{ id: 'w', startedAt: 'x', entries: [{ exerciseId: 'a', status: 'done', note }] }]
+
+  it('keeps a note on an entry', () => {
+    expect(validateData({ ...base, workouts: entries('felt easy') }).workouts[0].entries[0].note).toBe('felt easy')
+  })
+
+  it('drops empty or non-string notes', () => {
+    for (const note of ['', '   ', 5, null]) {
+      expect(validateData({ ...base, workouts: entries(note) }).workouts[0].entries[0]).not.toHaveProperty('note')
+    }
+  })
+})

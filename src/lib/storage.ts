@@ -1,4 +1,5 @@
-import { CATALOG, catalogKey, syncCatalog } from './catalog'
+import { CATALOG, catalogKey } from './catalog'
+import { syncLibrary } from './library'
 import { isMuscleGroup } from './muscles'
 import type { AppData, EntryStatus, Exercise, Theme, Workout } from './types'
 
@@ -18,6 +19,7 @@ export function defaultData(): AppData {
     workouts: [],
     catalogSynced: CATALOG.map((c) => catalogKey(c.name)),
     brandsStripped: true,
+    deduped: true,
   }
 }
 
@@ -25,7 +27,7 @@ export function loadData(): AppData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return defaultData()
-    return syncCatalog(validateData(JSON.parse(raw)), newId)
+    return syncLibrary(validateData(JSON.parse(raw)), newId)
   } catch {
     return defaultData()
   }
@@ -86,6 +88,7 @@ export function validateData(input: unknown): AppData {
           status,
           ...(typeof en.weight === 'number' ? { weight: en.weight } : {}),
           ...(typeof en.reps === 'number' ? { reps: en.reps } : {}),
+          ...(typeof en.note === 'string' && en.note.trim() ? { note: en.note } : {}),
         }
       }),
     }
@@ -99,6 +102,7 @@ export function validateData(input: unknown): AppData {
     settings: { exercisesPerWorkout: Number.isInteger(count) && count > 0 ? count : 6, theme },
     exercises,
     workouts,
+    ...(input.deduped === true ? { deduped: true } : {}),
     ...(input.brandsStripped === true ? { brandsStripped: true } : {}),
     ...(Array.isArray(input.catalogSynced)
       ? { catalogSynced: input.catalogSynced.filter((k): k is string => typeof k === 'string') }

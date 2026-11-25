@@ -3,27 +3,19 @@ import { ConfirmButton } from '../components/ConfirmButton'
 import { ElapsedTime } from '../components/ElapsedTime'
 import { averageDurationMs, formatDurationCompact } from '../lib/duration'
 import { formatDate, formatResult, relativeDays } from '../lib/format'
-import { activeExercises } from '../lib/storage'
 import { exerciseName, useExerciseMap, useStore } from '../lib/store'
 
 export function HomeScreen() {
-  const { data, activeWorkout, startWorkout, deleteWorkout, updateSettings } = useStore()
+  const { data, activeWorkout, startWorkout, deleteWorkout } = useStore()
   const exercises = useExerciseMap()
   const navigate = useNavigate()
 
-  const available = activeExercises(data.exercises).length
   const completed = data.workouts.filter((w) => w.finishedAt)
   const last = completed.at(-1)
   const averageMs = averageDurationMs(data.workouts)
 
-  const count = Math.max(1, Math.min(data.settings.exercisesPerWorkout, available))
-
-  function setCount(n: number) {
-    updateSettings({ exercisesPerWorkout: Math.max(1, Math.min(n, available)) })
-  }
-
   function onStart() {
-    const w = startWorkout(undefined, count)
+    const w = startWorkout()
     navigate(`/workout/${w.id}`)
   }
 
@@ -55,39 +47,13 @@ export function HomeScreen() {
         </div>
       ) : (
         <div className="card">
-          {available > 0 && (
-            <div className="field" role="group" aria-labelledby="count-label">
-              <label id="count-label">How many exercises?</label>
-              <div className="row">
-                <button style={{ width: 64 }} aria-label="Fewer exercises" onClick={() => setCount(count - 1)} disabled={count <= 1}>
-                  −
-                </button>
-                <span className="stat" style={{ flex: 1, textAlign: 'center' }} aria-live="polite">
-                  {count}
-                </span>
-                <button style={{ width: 64 }} aria-label="More exercises" onClick={() => setCount(count + 1)} disabled={count >= available}>
-                  +
-                </button>
-              </div>
-            </div>
-          )}
           <p className="muted small">
-            Picks {count} of your {available} exercises, favoring the ones you haven't done in a while and
-            alternating opposing muscles.
+            Start with a blank workout, then add exercises one at a time: pick one yourself, or ask for a suggestion
+            based on what you just did and what you haven't done in a while.
           </p>
-          <button className="btn-primary btn-block" onClick={onStart} disabled={available === 0}>
-            Start random workout
+          <button className="btn-primary btn-block" onClick={onStart}>
+            Start workout
           </button>
-          {available > 0 && (
-            <Link to="/choose" className="btn btn-block btn-ghost" style={{ marginTop: 8 }}>
-              Choose exercises myself
-            </Link>
-          )}
-          {available === 0 && (
-            <p className="muted small" style={{ marginTop: 12 }}>
-              Add some exercises first.
-            </p>
-          )}
         </div>
       )}
 

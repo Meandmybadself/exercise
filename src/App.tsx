@@ -1,6 +1,5 @@
 import { Route, Routes } from 'react-router-dom'
 import { TabBar } from './components/TabBar'
-import { ChooseWorkoutScreen } from './screens/ChooseWorkoutScreen'
 import { ExerciseDetailScreen } from './screens/ExerciseDetailScreen'
 import { ExercisesScreen } from './screens/ExercisesScreen'
 import { HistoryScreen } from './screens/HistoryScreen'
@@ -14,7 +13,6 @@ export function App() {
     <>
       <Routes>
         <Route path="/" element={<HomeScreen />} />
-        <Route path="/choose" element={<ChooseWorkoutScreen />} />
         <Route path="/workout/:id" element={<WorkoutScreen />} />
         <Route path="/history" element={<HistoryScreen />} />
         <Route path="/history/:id" element={<WorkoutDetailScreen />} />

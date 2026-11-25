@@ -16,9 +16,14 @@ describe('isSameMachine', () => {
     expect(isSameMachine('Naut. Nitro Adductor', 'Adductor')).toBe(true)
     expect(isSameMachine('Hoist ROC-IT Biceps Curl', 'Biceps Curl')).toBe(true)
   })
+  it('folds alternate names together', () => {
+    expect(isSameMachine('Seated Leg Press', 'Leg Press')).toBe(true)
+    expect(isSameMachine('Hip Adduction', 'Adductor')).toBe(true)
+    expect(isSameMachine('Bicep Curl', 'Hoist Biceps Curl')).toBe(true)
+  })
   it('keeps distinct exercises apart', () => {
     expect(isSameMachine('Seated Leg Curl', 'Prone Leg Curl')).toBe(false)
-    expect(isSameMachine('Hip Adduction', 'Adductor')).toBe(false)
+    expect(isSameMachine('Hack Squat', 'Squat')).toBe(false)
   })
 })
 
@@ -63,7 +68,7 @@ describe('syncCatalog', () => {
     expect(names).toContain('Incline Press')
     expect(names).toContain('Adductor')
     expect(names.filter((x) => x === 'Leg Extension')).toHaveLength(1)
-    expect(names).toContain('Seated Leg Press')
+    expect(names).toContain('Leg Press')
     expect(out.exercises.find((e) => e.name === 'Incline Press')?.id).toBe('Hammer Incline Press')
     expect(out.exercises.find((e) => e.name === 'Incline Press')?.muscle).toBe('chest')
     expect(out.exercises.find((e) => e.name === 'Leg Extension')?.muscle).toBe('quads')

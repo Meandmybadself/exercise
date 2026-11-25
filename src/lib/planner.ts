@@ -1,6 +1,6 @@
-import { inferMuscle } from './catalog'
+import { exerciseKey, inferMuscle } from './catalog'
 import { alternateMuscles, muscleOf, musclesOppose } from './muscles'
-import type { Exercise, Workout, WorkoutEntry } from './types'
+import type { Exercise, MuscleGroup, Workout, WorkoutEntry } from './types'
 
 /** Milliseconds since the exercise was last logged as done; Infinity if never. */
 export function msSinceLastDone(exerciseId: string, workouts: Workout[], now = Date.now()): number {
@@ -29,7 +29,14 @@ export function pickExercises(
   count: number,
   random: () => number = Math.random,
 ): Exercise[] {
-  const pool = exercises.filter((e) => !e.archived)
+  // One entry per exercise, even if the library holds the same one under two names.
+  const seenKeys = new Set<string>()
+  const pool = exercises.filter((e) => {
+    const key = exerciseKey(e.name)
+    if (e.archived || seenKeys.has(key)) return false
+    seenKeys.add(key)
+    return true
+  })
   const DAY = 86_400_000
   const weighted = pool.map((exercise) => {
     const ms = msSinceLastDone(exercise.id, workouts)
@@ -61,21 +68,48 @@ export function pickExercises(
   return picked
 }
 
+/** What to steer a suggestion by: "smart" (opposite of the last exercise) or one muscle group. */
+export type SuggestFilter = 'smart' | MuscleGroup
+
+export interface Suggestion {
+  exercise: Exercise
+  /** Set when this is suggested because it works the opposite muscle to the previous exercise. */
+  opposes?: MuscleGroup
+  /** Milliseconds since it was last done; Infinity if never. */
+  msSince: number
+}
+
 /**
- * Resolves hand-picked exercise ids in the order they were chosen, dropping
- * ids that are unknown, archived, or repeated.
+ * Exercises worth doing next, best first, skipping anything already in the workout (under any
+ * name). "Smart" puts exercises opposing the last one's muscle ahead of the rest. Within a
+ * group the order is a weighted shuffle favoring what hasn't been done in a while.
  */
-export function chooseExercises(exercises: Exercise[], ids: string[]): Exercise[] {
-  const byId = new Map(exercises.filter((e) => !e.archived).map((e) => [e.id, e]))
-  const seen = new Set<string>()
-  const picked: Exercise[] = []
-  for (const id of ids) {
-    const exercise = byId.get(id)
-    if (!exercise || seen.has(id)) continue
-    seen.add(id)
-    picked.push(exercise)
+export function suggestOrder(
+  exercises: Exercise[],
+  workouts: Workout[],
+  entries: WorkoutEntry[],
+  filter: SuggestFilter,
+  random: () => number = Math.random,
+): Suggestion[] {
+  const byId = new Map(exercises.map((e) => [e.id, e]))
+  const inWorkout = new Set(entries.map((en) => exerciseKey(byId.get(en.exerciseId)?.name ?? en.exerciseId)))
+  const candidates = exercises.filter((e) => !e.archived && !inWorkout.has(exerciseKey(e.name)))
+  const lastExercise = byId.get(entries.at(-1)?.exerciseId ?? '')
+  const lastMuscle = lastExercise && muscleFor(lastExercise)
+
+  const order = (group: Exercise[]) => pickExercises(group, workouts, group.length, random)
+  const make = (exercise: Exercise, opposes?: MuscleGroup): Suggestion => ({
+    exercise,
+    ...(opposes ? { opposes } : {}),
+    msSince: msSinceLastDone(exercise.id, workouts),
+  })
+
+  if (filter !== 'smart') {
+    return order(candidates.filter((e) => muscleFor(e) === filter)).map((e) => make(e))
   }
-  return picked
+  const opposing = candidates.filter((e) => musclesOppose(lastMuscle, muscleFor(e)))
+  const rest = candidates.filter((e) => !opposing.includes(e))
+  return [...order(opposing).map((e) => make(e, lastMuscle)), ...order(rest).map((e) => make(e))]
 }
 
 /** Reorders so opposing muscles sit back to back where possible. */

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { ConfirmButton } from '../components/ConfirmButton'
-import { activeExercises, validateData } from '../lib/storage'
+import { validateData } from '../lib/storage'
 import { useStore } from '../lib/store'
 import type { AppData, Theme } from '../lib/types'
 
@@ -16,8 +16,6 @@ export function SettingsScreen() {
   const [pending, setPending] = useState<AppData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-
-  const available = activeExercises(data.exercises).length
 
   function onExport() {
     const stamp = new Date().toISOString().slice(0, 10)
@@ -61,37 +59,6 @@ export function SettingsScreen() {
           Couldn't save to this browser's storage (it may be full). Export your data now to avoid losing it.
         </div>
       )}
-
-      <div className="card">
-        <div className="field" style={{ marginBottom: 0 }} role="group" aria-labelledby="per-workout-label">
-          <label id="per-workout-label">Exercises per workout</label>
-          <div className="row">
-            <button
-              style={{ width: 64 }}
-              aria-label="Fewer exercises"
-              onClick={() => updateSettings({ exercisesPerWorkout: Math.max(1, data.settings.exercisesPerWorkout - 1) })}
-              disabled={data.settings.exercisesPerWorkout <= 1}
-            >
-              −
-            </button>
-            <span className="stat" style={{ flex: 1, textAlign: 'center' }} aria-live="polite">
-              {data.settings.exercisesPerWorkout}
-            </span>
-            <button
-              style={{ width: 64 }}
-              aria-label="More exercises"
-              onClick={() => updateSettings({ exercisesPerWorkout: data.settings.exercisesPerWorkout + 1 })}
-            >
-              +
-            </button>
-          </div>
-          {data.settings.exercisesPerWorkout > available && (
-            <p className="muted small" style={{ marginTop: 8 }}>
-              You only have {available} active exercises, so workouts will use all of them.
-            </p>
-          )}
-        </div>
-      </div>
 
       <h2>Appearance</h2>
       <div className="card">

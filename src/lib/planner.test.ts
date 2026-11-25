@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { chooseExercises, lastResult, orderForAlternation, pickExercises } from './planner'
+import { lastResult, orderForAlternation, pickExercises, suggestOrder } from './planner'
 import type { Exercise, Workout } from './types'
 
 const ex = (id: string, archived = false): Exercise => ({ id, name: id, ...(archived ? { archived } : {}) })
@@ -63,22 +63,6 @@ describe('lastResult', () => {
   })
 })
 
-describe('chooseExercises', () => {
-  const library = [ex('a'), ex('b'), ex('c'), ex('gone', true)]
-
-  it('keeps the order they were picked in', () => {
-    expect(chooseExercises(library, ['c', 'a']).map((e) => e.id)).toEqual(['c', 'a'])
-  })
-
-  it('drops unknown, archived, and repeated ids', () => {
-    expect(chooseExercises(library, ['a', 'nope', 'gone', 'a', 'b']).map((e) => e.id)).toEqual(['a', 'b'])
-  })
-
-  it('returns nothing for an empty pick', () => {
-    expect(chooseExercises(library, [])).toEqual([])
-  })
-})
-
 describe('opposing muscles', () => {
   const m = (id: string, muscle: Exercise['muscle']): Exercise => ({ id, name: id, muscle })
   const library = [m('chest1', 'chest'), m('chest2', 'shoulders'), m('row1', 'back'), m('curl', 'biceps'), m('quad', 'quads'), m('ham', 'hamstrings')]
@@ -105,5 +89,44 @@ describe('opposing muscles', () => {
   it('reorders by alternation without dropping anything', () => {
     const out = orderForAlternation([m('a', 'chest'), m('b', 'shoulders'), m('c', 'back'), m('d', 'triceps'), m('e', 'biceps')])
     expect(out.map((e) => e.id)).toEqual(['a', 'c', 'b', 'e', 'd'])
+  })
+})
+
+describe('suggestOrder', () => {
+  const m = (id: string, muscle: Exercise['muscle'], archived = false): Exercise => ({ id, name: id, muscle, ...(archived ? { archived } : {}) })
+  const lib = [m('bench', 'chest'), m('row', 'back'), m('pull', 'back'), m('curl', 'biceps'), m('squat', 'quads'), m('old', 'back', true)]
+  const entry = (exerciseId: string) => ({ exerciseId, status: 'done' as const })
+  const ids = (xs: { exercise: Exercise }[]) => xs.map((s) => s.exercise.id)
+
+  it('suggests the opposite of the last exercise first, then the rest', () => {
+    const out = suggestOrder(lib, [], [entry('bench')], 'smart', () => 0)
+    expect(ids(out).slice(0, 3).sort()).toEqual(['curl', 'pull', 'row'])
+    expect(out.slice(0, 3).every((s) => s.opposes === 'chest')).toBe(true)
+    expect(ids(out).slice(3)).toEqual(['squat'])
+    expect(out[3].opposes).toBeUndefined()
+  })
+
+  it('never suggests what is already in the workout, archived exercises, or a repeat under another name', () => {
+    const out = suggestOrder([...lib, { id: 'bench2', name: 'Bench', muscle: 'chest' }, m('Bench', 'chest')], [], [entry('bench')], 'smart')
+    expect(ids(out)).not.toContain('bench')
+    expect(ids(out)).not.toContain('old')
+    expect(ids(out)).not.toContain('Bench')
+  })
+
+  it('filters to one muscle when asked', () => {
+    const out = suggestOrder(lib, [], [entry('bench')], 'back', () => 0)
+    expect(ids(out).sort()).toEqual(['pull', 'row'])
+  })
+
+  it('starts from whatever is stalest when the workout is empty', () => {
+    const workouts = [workout('w1', daysAgo(1), ['bench', 'row', 'pull', 'curl'])]
+    expect(suggestOrder(lib, workouts, [], 'smart', () => 0.99)[0].exercise.id).toBe('squat')
+  })
+
+  it('reports how long since each was done', () => {
+    const workouts = [workout('w1', daysAgo(3), ['bench'])]
+    const out = suggestOrder(lib, workouts, [entry('row')], 'chest')
+    expect(out[0].msSince).toBeGreaterThan(2.9 * 86_400_000)
+    expect(suggestOrder(lib, [], [], 'smart')[0].msSince).toBe(Infinity)
   })
 })

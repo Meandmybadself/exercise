@@ -29,7 +29,7 @@ export const CATALOG: CatalogItem[] = [
   { name: 'Belt Squat', muscle: 'quads' },
   { name: 'Hack Squat', muscle: 'quads' },
   { name: 'Leg Extension', muscle: 'quads' },
-  { name: 'Seated Leg Press', muscle: 'quads' },
+  { name: 'Leg Press', muscle: 'quads' },
   { name: 'Kneeling Leg Curl', muscle: 'hamstrings' },
   { name: 'Seated Leg Curl', muscle: 'hamstrings' },
   { name: 'Prone Leg Curl', muscle: 'hamstrings' },
@@ -67,9 +67,45 @@ function parseName(name: string): { core: string } {
   return { core: words.join(' ').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() }
 }
 
-/** True when two names are the same exercise, ignoring case, punctuation and brand words. */
+/** Other names for the same exercise, mapped to the name they collapse into (all lowercase, brand-free). */
+const ALIASES: Record<string, string> = {
+  'seated leg press': 'leg press',
+  'seated leg extension': 'leg extension',
+  'seated chest press': 'chest press',
+  'seated shoulder press': 'shoulder press',
+  'arm curl': 'bicep curl',
+  'lat pull down': 'lat pulldown',
+  pulldown: 'lat pulldown',
+  'lat machine': 'lat pulldown',
+  'hip adduction': 'adductor',
+  'hip adductor': 'adductor',
+  'inner thigh': 'adductor',
+  'hip abduction': 'abductor',
+  'hip abductor': 'abductor',
+  'outer thigh': 'abductor',
+  abdominal: 'abdominals',
+  abs: 'abdominals',
+  'abdominal crunch': 'abdominals',
+  'ab crunch': 'abdominals',
+  'lying leg curl': 'prone leg curl',
+  'rotary torso': 'torso rotation',
+}
+
+/**
+ * Identity of an exercise: its name without brand words, case, punctuation or plurals,
+ * with known alternate names folded together ("Seated Leg Press" and "Leg Press" match).
+ */
+export function exerciseKey(name: string): string {
+  const core = parseName(name)
+    .core.split(' ')
+    .map((w) => (w === 'biceps' ? 'bicep' : w === 'triceps' ? 'tricep' : w))
+    .join(' ')
+  return ALIASES[core] ?? core
+}
+
+/** True when two names are the same exercise. */
 export function isSameMachine(existing: string, catalogName: string): boolean {
-  return parseName(existing).core === parseName(catalogName).core
+  return exerciseKey(existing) === exerciseKey(catalogName)
 }
 
 /** Keyword rules for guessing a muscle from a name. Order matters: first match wins. */
@@ -95,7 +131,7 @@ export function inferMuscle(name: string): MuscleGroup | undefined {
 }
 
 export function catalogKey(name: string): string {
-  return parseName(name).core
+  return exerciseKey(name)
 }
 
 /**
