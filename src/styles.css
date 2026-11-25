@@ -526,3 +526,29 @@ input:focus {
   background: var(--danger);
   color: #fff;
 }
+
+/* Per-set notes */
+.note-input {
+  width: 100%;
+  font: inherit;
+  font-size: 16px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  resize: vertical;
+}
+
+.note-input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+  border-color: transparent;
+}
+
+.entry-note {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--muted);
+  white-space: pre-wrap;
+}

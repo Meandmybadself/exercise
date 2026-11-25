@@ -27,6 +27,8 @@ export interface WorkoutEntry {
   exerciseId: string
   weight?: number
   reps?: number
+  /** Free-form note about how the set felt, form cues, settings used, etc. */
+  note?: string
   status: EntryStatus
 }
 

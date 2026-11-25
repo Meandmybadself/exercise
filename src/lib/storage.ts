@@ -86,6 +86,7 @@ export function validateData(input: unknown): AppData {
           status,
           ...(typeof en.weight === 'number' ? { weight: en.weight } : {}),
           ...(typeof en.reps === 'number' ? { reps: en.reps } : {}),
+          ...(typeof en.note === 'string' && en.note.trim() ? { note: en.note } : {}),
         }
       }),
     }

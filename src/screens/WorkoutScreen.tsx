@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ConfirmButton } from '../components/ConfirmButton'
 import { ElapsedTime } from '../components/ElapsedTime'
@@ -144,6 +144,33 @@ function AddExercise({ workout, onAdd }: { workout: Workout; onAdd: (exerciseId:
   )
 }
 
+/** Notes for one logged set. Collapsed to a button until there's something to say. */
+function NoteField({ value, onChange }: { value: string; onChange: (note: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const id = useId()
+  if (!open && !value) {
+    return (
+      <button className="btn-sm btn-ghost" style={{ marginBottom: 12 }} onClick={() => setOpen(true)}>
+        + Note
+      </button>
+    )
+  }
+  return (
+    <div className="field">
+      <label htmlFor={id}>Note</label>
+      <textarea
+        id={id}
+        className="note-input"
+        rows={2}
+        autoFocus={open && !value}
+        value={value}
+        placeholder="How did it feel? Form cues, settings…"
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  )
+}
+
 function EntryCard({
   workout,
   entry,
@@ -186,6 +213,7 @@ function EntryCard({
           ? `Last: ${formatResult(previous.entry.weight, previous.entry.reps)} · ${relativeDays(previous.date)}`
           : 'First time'}
       </div>
+      {previous?.entry.note && <div className="entry-note">“{previous.entry.note}”</div>}
 
       {entry.status === 'skipped' ? (
         <button className="btn-sm" onClick={() => onChange({ status: 'pending' })}>
@@ -211,6 +239,7 @@ function EntryCard({
               onChange={(e) => onChange({ reps: e.target.value === '' ? undefined : Number(e.target.value) })}
             />
           </div>
+          <NoteField value={entry.note ?? ''} onChange={(note) => onChange({ note: note || undefined })} />
           {entry.status === 'pending' ? (
             <div className="btn-row" style={{ marginTop: 0 }}>
               <button className="btn-ghost" onClick={() => onChange({ status: 'skipped' })}>

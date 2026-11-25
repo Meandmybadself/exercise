@@ -16,6 +16,7 @@ Live at [exercise.meandmybadself.com](https://exercise.meandmybadself.com).
 - Live timer that starts with the workout and stops when you finish, with durations kept in history
 - Swap or skip exercises mid-workout
 - Shows your last weight/reps for each exercise and prefills them
+- Optional note on each logged set, shown in history, progress and as a reminder next time
 - History log and per-exercise progression
 - Import / export of all history and configuration as JSON
 - Installable PWA; works offline

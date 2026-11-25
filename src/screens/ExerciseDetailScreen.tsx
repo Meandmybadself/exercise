@@ -75,6 +75,7 @@ export function ExerciseDetailScreen() {
                 <div className="row-main">
                   <div className="row-title">{formatResult(h.entry.weight, h.entry.reps)}</div>
                   <div className="row-sub">{formatDate(h.date)}</div>
+                  {h.entry.note && <div className="entry-note">{h.entry.note}</div>}
                 </div>
                 {delta !== 0 && (
                   <span className={`badge ${delta > 0 ? 'up' : 'down'}`}>
