@@ -25,3 +25,14 @@ export function relativeDays(iso: string, now = Date.now()): string {
   if (days === 1) return 'yesterday'
   return `${days} days ago`
 }
+
+/** Number typed into an input box, or undefined when it's empty or not a number. */
+export function parseNumber(text: string): number | undefined {
+  if (text.trim() === '') return undefined
+  const n = Number(text)
+  return Number.isFinite(n) ? n : undefined
+}
+
+export function numberText(n: number | undefined): string {
+  return n === undefined ? '' : String(n)
+}

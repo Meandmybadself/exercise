@@ -5,7 +5,7 @@ import { ElapsedTime } from '../components/ElapsedTime'
 import { Field } from '../components/Field'
 import { NotFound } from '../components/NotFound'
 import { exerciseKey } from '../lib/catalog'
-import { formatResult, relativeDays } from '../lib/format'
+import { formatResult, numberText, parseNumber, relativeDays } from '../lib/format'
 import { lastResult } from '../lib/planner'
 import { activeExercises } from '../lib/storage'
 import { exerciseName, useExerciseMap, useStore } from '../lib/store'
@@ -189,11 +189,13 @@ function EntryCard({
   const exercise = exercises.get(entry.exerciseId)
   const previous = lastResult(entry.exerciseId, data.workouts.filter((w) => w.id !== workout.id))
 
-  const weight = entry.weight ?? previous?.entry.weight
-  const reps = entry.reps ?? previous?.entry.reps
+  // The boxes keep their own text so they can be emptied and retyped. Last session's numbers
+  // only prefill the starting value; they must not come back when a box is cleared.
+  const [weightText, setWeightText] = useState(() => numberText(entry.weight ?? previous?.entry.weight))
+  const [repsText, setRepsText] = useState(() => numberText(entry.reps ?? previous?.entry.reps))
 
   function markDone() {
-    onChange({ status: 'done', weight, reps })
+    onChange({ status: 'done', weight: parseNumber(weightText), reps: parseNumber(repsText) })
   }
 
   return (
@@ -229,16 +231,22 @@ function EntryCard({
               type="number"
               inputMode="decimal"
               className="num-input"
-              value={weight ?? ''}
-              onChange={(e) => onChange({ weight: e.target.value === '' ? undefined : Number(e.target.value) })}
+              value={weightText}
+              onChange={(e) => {
+                setWeightText(e.target.value)
+                onChange({ weight: parseNumber(e.target.value) })
+              }}
             />
             <Field
               label="Reps"
               type="number"
               inputMode="numeric"
               className="num-input"
-              value={reps ?? ''}
-              onChange={(e) => onChange({ reps: e.target.value === '' ? undefined : Number(e.target.value) })}
+              value={repsText}
+              onChange={(e) => {
+                setRepsText(e.target.value)
+                onChange({ reps: parseNumber(e.target.value) })
+              }}
             />
           </div>
           <NoteField value={entry.note ?? ''} onChange={(note) => onChange({ note: note || undefined })} />
