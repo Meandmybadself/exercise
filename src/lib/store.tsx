@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { chooseExercises, pickExercises } from './planner'
-import { inferMuscle, syncCatalog } from './catalog'
+import { exerciseKey, inferMuscle } from './catalog'
+import { syncLibrary } from './library'
 import { muscleOf } from './muscles'
 import { loadData, newId, saveData } from './storage'
 import type { AppData, Exercise, Settings, Theme, Workout, WorkoutEntry } from './types'
@@ -109,17 +110,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         })),
 
       addEntry: (workoutId, exerciseId) =>
-        updateWorkout(workoutId, (w) =>
-          w.entries.some((e) => e.exerciseId === exerciseId)
-            ? w
-            : { ...w, entries: [...w.entries, { exerciseId, status: 'pending' }] },
-        ),
+        updateWorkout(workoutId, (w, d) => {
+          // Skip an exercise already in the workout, including under another name.
+          const key = exerciseKey(d.exercises.find((e) => e.id === exerciseId)?.name ?? exerciseId)
+          const present = w.entries.some(
+            (e) => e.exerciseId === exerciseId || exerciseKey(d.exercises.find((x) => x.id === e.exerciseId)?.name ?? e.exerciseId) === key,
+          )
+          return present ? w : { ...w, entries: [...w.entries, { exerciseId, status: 'pending' }] }
+        }),
 
       // Replace an entry with a random exercise not already in this workout.
       swapEntry: (workoutId, exerciseId) =>
         updateWorkout(workoutId, (w, d) => {
-          const inUse = new Set(w.entries.map((e) => e.exerciseId))
-          const unused = d.exercises.filter((e) => !inUse.has(e.id))
+          const inUse = new Set(
+            w.entries.map((e) => exerciseKey(d.exercises.find((x) => x.id === e.exerciseId)?.name ?? e.exerciseId)),
+          )
+          const unused = d.exercises.filter((e) => !inUse.has(exerciseKey(e.name)))
           // Prefer the same muscle so the push/pull alternation survives the swap.
           const current = d.exercises.find((e) => e.id === exerciseId)
           const muscle = current && muscleOf(current, inferMuscle)
@@ -145,7 +151,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       deleteWorkout: (workoutId) =>
         update((d) => ({ ...d, workouts: d.workouts.filter((w) => w.id !== workoutId) })),
 
-      replaceData: (next) => setData(syncCatalog(next, newId)),
+      replaceData: (next) => setData(syncLibrary(next, newId)),
     }),
     [data, activeWorkout, saveFailed, update, updateWorkout],
   )

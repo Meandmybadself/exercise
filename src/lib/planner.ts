@@ -1,4 +1,4 @@
-import { inferMuscle } from './catalog'
+import { exerciseKey, inferMuscle } from './catalog'
 import { alternateMuscles, muscleOf, musclesOppose } from './muscles'
 import type { Exercise, Workout, WorkoutEntry } from './types'
 
@@ -29,7 +29,14 @@ export function pickExercises(
   count: number,
   random: () => number = Math.random,
 ): Exercise[] {
-  const pool = exercises.filter((e) => !e.archived)
+  // One entry per exercise, even if the library holds the same one under two names.
+  const seenKeys = new Set<string>()
+  const pool = exercises.filter((e) => {
+    const key = exerciseKey(e.name)
+    if (e.archived || seenKeys.has(key)) return false
+    seenKeys.add(key)
+    return true
+  })
   const DAY = 86_400_000
   const weighted = pool.map((exercise) => {
     const ms = msSinceLastDone(exercise.id, workouts)
@@ -71,8 +78,9 @@ export function chooseExercises(exercises: Exercise[], ids: string[]): Exercise[
   const picked: Exercise[] = []
   for (const id of ids) {
     const exercise = byId.get(id)
-    if (!exercise || seen.has(id)) continue
-    seen.add(id)
+    const key = exercise && exerciseKey(exercise.name)
+    if (!exercise || !key || seen.has(key)) continue
+    seen.add(key)
     picked.push(exercise)
   }
   return picked

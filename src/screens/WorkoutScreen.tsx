@@ -4,6 +4,7 @@ import { ConfirmButton } from '../components/ConfirmButton'
 import { ElapsedTime } from '../components/ElapsedTime'
 import { Field } from '../components/Field'
 import { NotFound } from '../components/NotFound'
+import { exerciseKey } from '../lib/catalog'
 import { formatResult, relativeDays } from '../lib/format'
 import { lastResult } from '../lib/planner'
 import { activeExercises } from '../lib/storage'
@@ -95,9 +96,10 @@ function AddExercise({ workout, onAdd }: { workout: Workout; onAdd: (exerciseId:
 
   // An empty workout has nothing to go back to, so the list just stays open.
   const isEmpty = workout.entries.length === 0
-  const inWorkout = new Set(workout.entries.map((e) => e.exerciseId))
+  const byId = new Map(data.exercises.map((e) => [e.id, e]))
+  const inWorkout = new Set(workout.entries.map((e) => exerciseKey(byId.get(e.exerciseId)?.name ?? e.exerciseId)))
   const remaining = activeExercises(data.exercises)
-    .filter((e) => !inWorkout.has(e.id))
+    .filter((e) => !inWorkout.has(exerciseKey(e.name)))
     .sort((a, b) => a.name.localeCompare(b.name))
 
   if (remaining.length === 0) {

@@ -55,4 +55,6 @@ export interface AppData {
   catalogSynced?: string[]
   /** Set once brand names have been removed from exercise names. */
   brandsStripped?: boolean
+  /** Set once duplicate exercises have been merged. */
+  deduped?: boolean
 }

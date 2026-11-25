@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Field } from '../components/Field'
-import { missingFromCatalog } from '../lib/catalog'
+import { isSameMachine, missingFromCatalog } from '../lib/catalog'
 import { MuscleSelect } from '../components/MuscleSelect'
 import { formatResult, relativeDays } from '../lib/format'
 import { lastResult } from '../lib/planner'
@@ -14,6 +14,7 @@ export function ExercisesScreen() {
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
   const [seat, setSeat] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [muscle, setMuscle] = useState<MuscleGroup | undefined>()
 
   const missing = missingFromCatalog(data.exercises.map((e) => e.name))
@@ -23,6 +24,12 @@ export function ExercisesScreen() {
     e.preventDefault()
     const trimmed = name.trim()
     if (!trimmed) return
+    const clash = activeExercises(data.exercises).find((x) => isSameMachine(x.name, trimmed))
+    if (clash) {
+      setError(`You already have “${clash.name}”.`)
+      return
+    }
+    setError(null)
     addExercise({ name: trimmed, ...(seat.trim() ? { seatSetting: seat.trim() } : {}), ...(muscle ? { muscle } : {}) })
     setName('')
     setSeat('')
@@ -42,6 +49,7 @@ export function ExercisesScreen() {
       {adding && (
         <form className="card" onSubmit={onSubmit}>
           <Field label="Name" type="text" value={name} onChange={(e) => setName(e.target.value)} autoFocus required />
+          {error && <p className="error">{error}</p>}
           <Field
             label="Seat setting (optional)"
             type="text"
