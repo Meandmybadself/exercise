@@ -51,4 +51,6 @@ export interface AppData {
   workouts: Workout[]
   /** Catalog machines already offered to this library, so removed ones aren't re-added. */
   catalogSynced?: string[]
+  /** Set once brand names have been removed from exercise names. */
+  brandsStripped?: boolean
 }

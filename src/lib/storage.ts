@@ -17,6 +17,7 @@ export function defaultData(): AppData {
     exercises: SEED_EXERCISES,
     workouts: [],
     catalogSynced: CATALOG.map((c) => catalogKey(c.name)),
+    brandsStripped: true,
   }
 }
 
@@ -98,6 +99,7 @@ export function validateData(input: unknown): AppData {
     settings: { exercisesPerWorkout: Number.isInteger(count) && count > 0 ? count : 6, theme },
     exercises,
     workouts,
+    ...(input.brandsStripped === true ? { brandsStripped: true } : {}),
     ...(Array.isArray(input.catalogSynced)
       ? { catalogSynced: input.catalogSynced.filter((k): k is string => typeof k === 'string') }
       : {}),
