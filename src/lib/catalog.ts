@@ -1,4 +1,4 @@
-import type { MuscleGroup } from './types'
+import type { Exercise, MuscleGroup } from './types'
 
 export interface CatalogItem {
   name: string
@@ -7,51 +7,122 @@ export interface CatalogItem {
 
 /** Known gym equipment. More gets added here as machines are photographed. */
 export const CATALOG: CatalogItem[] = [
-  { name: 'Naut. Nitro Adductor', muscle: 'adductors' },
-  { name: 'Naut. Nitro Abductor', muscle: 'abductors' },
-  { name: 'Naut. Nitro Abdominals', muscle: 'core' },
-  { name: 'Hammer Incline Press', muscle: 'chest' },
-  { name: 'MedX Pullover', muscle: 'back' },
-  { name: 'MedX Torso Arm - Sup.', muscle: 'back' },
-  { name: 'Hoist Chin/Dip Assist', muscle: 'back' },
-  { name: 'Hammer Lateral Raise', muscle: 'shoulders' },
-  { name: 'Precor Shoulder Press 500', muscle: 'shoulders' },
-  { name: 'Life Fitness Torso Rotation', muscle: 'core' },
-  { name: 'Freemotion Genesis Step', muscle: 'quads' },
-  { name: 'Hammer Belt Squat', muscle: 'quads' },
-  { name: 'Hammer Hack Squat', muscle: 'quads' },
-  { name: 'Technogym Leg Extension', muscle: 'quads' },
-  { name: 'Life Fitness Kneeling Leg Curl', muscle: 'hamstrings' },
-  { name: 'Life Fitness High Row', muscle: 'back' },
-  { name: 'Life Fitness Seated Row', muscle: 'back' },
-  { name: 'Technogym Upper Back Selection', muscle: 'back' },
-  { name: 'Hoist Biceps Curl', muscle: 'biceps' },
-  { name: 'Life Fitness Biceps Curl', muscle: 'biceps' },
-  { name: 'Freemotion Genesis Dual Cable Cross', muscle: 'chest' },
-  { name: 'Freemotion Genesis Squat', muscle: 'quads' },
-  { name: 'Life Fitness Hip Abduction', muscle: 'abductors' },
-  { name: 'Life Fitness Hip Adduction', muscle: 'adductors' },
-  { name: 'Hoist Leg Extension', muscle: 'quads' },
-  { name: 'Life Fitness Seated Leg Press', muscle: 'quads' },
-  { name: 'Life Fitness Seated Leg Curl', muscle: 'hamstrings' },
-  { name: 'Technogym Prone Leg Curl', muscle: 'hamstrings' },
-  { name: 'Cybex Eagle Prone Leg Curl', muscle: 'hamstrings' },
-  { name: 'Technogym Lat Machine', muscle: 'back' },
-  { name: 'Life Fitness Lat Pulldown', muscle: 'back' },
-  { name: 'Hoist Mid Row', muscle: 'back' },
-  { name: 'Hoist Shoulder Press', muscle: 'shoulders' },
-  { name: 'Life Fitness Shoulder Press', muscle: 'shoulders' },
+  { name: 'Adductor', muscle: 'adductors' },
+  { name: 'Abductor', muscle: 'abductors' },
+  { name: 'Abdominals', muscle: 'core' },
+  { name: 'Incline Press', muscle: 'chest' },
+  { name: 'Dual Cable Cross', muscle: 'chest' },
+  { name: 'Pullover', muscle: 'back' },
+  { name: 'Torso Arm - Sup.', muscle: 'back' },
+  { name: 'Chin/Dip Assist', muscle: 'back' },
+  { name: 'Lat Pulldown', muscle: 'back' },
+  { name: 'High Row', muscle: 'back' },
+  { name: 'Seated Row', muscle: 'back' },
+  { name: 'Mid Row', muscle: 'back' },
+  { name: 'Upper Back', muscle: 'back' },
+  { name: 'Lateral Raise', muscle: 'shoulders' },
+  { name: 'Shoulder Press', muscle: 'shoulders' },
+  { name: 'Biceps Curl', muscle: 'biceps' },
+  { name: 'Torso Rotation', muscle: 'core' },
+  { name: 'Step', muscle: 'quads' },
+  { name: 'Squat', muscle: 'quads' },
+  { name: 'Belt Squat', muscle: 'quads' },
+  { name: 'Hack Squat', muscle: 'quads' },
+  { name: 'Leg Extension', muscle: 'quads' },
+  { name: 'Seated Leg Press', muscle: 'quads' },
+  { name: 'Kneeling Leg Curl', muscle: 'hamstrings' },
+  { name: 'Seated Leg Curl', muscle: 'hamstrings' },
+  { name: 'Prone Leg Curl', muscle: 'hamstrings' },
 ]
 
-const norm = (name: string) => name.trim().toLowerCase()
-const byName = new Map(CATALOG.map((c) => [norm(c.name), c]))
-
+/** Muscle the catalog lists for a machine, matched ignoring case, punctuation and brand words. */
 export function catalogMuscle(name: string): MuscleGroup | undefined {
-  return byName.get(norm(name))?.muscle
+  const key = catalogKey(name)
+  return CATALOG.find((c) => catalogKey(c.name) === key)?.muscle
 }
 
 /** Catalog entries whose name isn't already in the library (archived ones count as present). */
 export function missingFromCatalog(existingNames: string[]): CatalogItem[] {
-  const have = new Set(existingNames.map(norm))
-  return CATALOG.filter((c) => !have.has(norm(c.name)))
+  return CATALOG.filter((c) => !existingNames.some((n) => isSameMachine(n, c.name)))
+}
+
+/** Maker and product-line words that are stripped from exercise names. */
+const BRAND_WORDS = new Set([
+  'life', 'fitness', 'lf', 'lifetime', 'hammer', 'strength', 'hoist', 'rocit', 'technogym', 'selection',
+  'precor', 'freemotion', 'genesis', 'cybex', 'eagle', 'naut', 'nautilus', 'nitro', 'medx',
+])
+
+const isBrand = (word: string) => BRAND_WORDS.has(word.toLowerCase().replace(/[^a-z0-9]/g, ''))
+
+/** Removes brand words: "Naut. Nitro Adductor" → "Adductor". Returns the name unchanged if nothing would be left. */
+export function stripBrand(name: string): string {
+  const kept = name.split(/\s+/).filter((w) => w && !isBrand(w))
+  const stripped = kept.join(' ').replace(/^[-–:\s]+/, '')
+  return stripped || name
+}
+
+/** Lowercased words of a name with brand words removed, for comparing machines. */
+function parseName(name: string): { core: string } {
+  const words = name.split(/\s+/).filter((w) => w && !isBrand(w))
+  return { core: words.join(' ').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim() }
+}
+
+/** True when two names are the same exercise, ignoring case, punctuation and brand words. */
+export function isSameMachine(existing: string, catalogName: string): boolean {
+  return parseName(existing).core === parseName(catalogName).core
+}
+
+/** Keyword rules for guessing a muscle from a name. Order matters: first match wins. */
+const RULES: [RegExp, MuscleGroup][] = [
+  [/\b(?:adduct)/, 'adductors'],
+  [/\b(?:abduct)/, 'abductors'],
+  [/\b(?:leg curl|hamstring|glute|hip extension|deadlift)/, 'hamstrings'],
+  [/\b(?:leg press|leg extension|squat|hack|lunge|step|quad)/, 'quads'],
+  [/\b(?:abdominal|abs\b|ab\b|crunch|oblique|rotation|rotary|core)/, 'core'],
+  [/\b(?:triceps|pushdown|dip|skull)/, 'triceps'],
+  [/\b(?:bicep|curl)/, 'biceps'],
+  [/\b(?:shoulder|lateral raise|deltoid|overhead|military)/, 'shoulders'],
+  [/\b(?:chest|pec|fly|bench|incline|decline|press)/, 'chest'],
+  [/\b(?:row|pulldown|pull down|pullover|lat\b|latissimus|chin|pull up|pull-up|back|torso arm|shrug|rear)/, 'back'],
+]
+
+/** Muscle for a name: the catalog's answer if it knows the machine, else a keyword guess. */
+export function inferMuscle(name: string): MuscleGroup | undefined {
+  const known = catalogMuscle(name)
+  if (known) return known
+  const n = name.toLowerCase()
+  return RULES.find(([re]) => re.test(n))?.[1]
+}
+
+export function catalogKey(name: string): string {
+  return parseName(name).core
+}
+
+/**
+ * Brings a library up to date: adds catalog machines it has never been offered (skipping
+ * any it already has) and fills in missing muscle groups. Machines the user later removes
+ * stay removed because their names are remembered in `catalogSynced`.
+ */
+export function syncCatalog<T extends { exercises: Exercise[]; catalogSynced?: string[]; brandsStripped?: boolean }>(
+  data: T,
+  newId: () => string,
+): T {
+  // Brand names are dropped once; after that, names are the user's to choose.
+  const library = data.brandsStripped
+    ? data.exercises
+    : data.exercises.map((e) => (stripBrand(e.name) === e.name ? e : { ...e, name: stripBrand(e.name) }))
+  const synced = new Set(data.catalogSynced ?? [])
+  const added: Exercise[] = []
+  for (const item of CATALOG) {
+    if (synced.has(catalogKey(item.name))) continue
+    const have = [...library, ...added].some((e) => isSameMachine(e.name, item.name))
+    if (!have) added.push({ id: newId(), name: item.name, muscle: item.muscle })
+  }
+  const exercises = [...library, ...added].map((e) =>
+    e.muscle ? e : { ...e, ...(inferMuscle(e.name) ? { muscle: inferMuscle(e.name) } : {}) },
+  )
+  const catalogSynced = CATALOG.map((c) => catalogKey(c.name))
+  const unchanged = added.length === 0 && exercises.every((e, i) => e === data.exercises[i])
+  if (unchanged && data.brandsStripped && catalogSynced.every((k) => synced.has(k))) return data
+  return { ...data, exercises, catalogSynced, brandsStripped: true }
 }

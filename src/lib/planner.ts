@@ -1,4 +1,4 @@
-import { catalogMuscle } from './catalog'
+import { inferMuscle } from './catalog'
 import { alternateMuscles, muscleOf, musclesOppose } from './muscles'
 import type { Exercise, Workout, WorkoutEntry } from './types'
 
@@ -15,7 +15,7 @@ export function msSinceLastDone(exerciseId: string, workouts: Workout[], now = D
   return latest === -Infinity ? Infinity : now - latest
 }
 
-const muscleFor = (e: Exercise) => muscleOf(e, catalogMuscle)
+const muscleFor = (e: Exercise) => muscleOf(e, inferMuscle)
 
 /**
  * Picks `count` exercises at random, weighted toward those done least recently.
